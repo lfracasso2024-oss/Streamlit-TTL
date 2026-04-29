@@ -42,8 +42,8 @@ v1 = st.sidebar.number_input("Lower Frequency (v1)", min_value=4e13, value=4e14,
 v2 = st.sidebar.number_input("Upper Frequency (v2)", min_value=8e14, value=8e14, step=1e9, format="%.1e")
 
 # add number input for y axis limits
-y_min = st.sidebar.number_input("Y-axis Minimum", min_value=-20.0, max_value=0.0, value=-15.0, step=1.0)
-y_max = st.sidebar.number_input("Y-axis Maximum", min_value=-20.0, max_value=0.0, value=-5.0, step=1.0)
+y_min = st.sidebar.number_input("Y-axis Minimum", min_value=-20.0, max_value=15.0, value=-15.0, step=1.0)
+y_max = st.sidebar.number_input("Y-axis Maximum", min_value=-20.0, max_value=15.0, value=-5.0, step=1.0)
 
 # error
 if v1 >= v2:
