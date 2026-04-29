@@ -76,7 +76,7 @@ else:
     ax.axvline(v2, linestyle='--', color='red', label=f'v2 = {v2:.1e} Hz')
 
     ax.set_xscale('log')
-    ax.set_ylim(-15, -5)
+    ax.set_ylim(y_min, y_max)
 
     ax.set_xlabel('Frequency (Hz)')
     ax.set_ylabel('log10(Spectral Radiance)')
