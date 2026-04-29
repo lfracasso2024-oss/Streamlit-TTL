@@ -63,22 +63,23 @@ else:
     frequencies = np.logspace(12, 18, 1000)
     intensities = np.array([planck(v, T) for v in frequencies])
 
-    ax.plot(frequencies, intensities, linewidth=2, color='black', label='Blackbody Spectrum')
+    log_intensities = np.log10(intensities + 1e-50)
 
-    log_intensities = np.log10(intensities)
+    ax.plot(frequencies, log_intensities, linewidth=2,
+        color='black', label='Blackbody Spectrum')
 
-    # Shade area
     mask = (frequencies >= v1) & (frequencies <= v2)
-    ax.fill_between(frequencies[mask], log_intensities[mask], alpha=0.3, label=f"Fraction = {fraction:.2%}", color='orange')
+    ax.fill_between(frequencies[mask], log_intensities[mask], y2=-30,
+                alpha=0.3, label=f"Fraction = {fraction:.2%}", color='orange')
 
-    # Vertical lines
     ax.axvline(v1, linestyle='--', color='red', label=f'v1 = {v1:.1e} Hz')
     ax.axvline(v2, linestyle='--', color='red', label=f'v2 = {v2:.1e} Hz')
+
     ax.set_xscale('log')
-    ax.plot(frequencies, log_intensities, linewidth=2, color='black', label='Blackbody Spectrum')
-    ax.set_ylim(y_min, y_max)
+    ax.set_ylim(-15, -5)
+
     ax.set_xlabel('Frequency (Hz)')
-    ax.set_ylabel('Spectral Radiance')
+    ax.set_ylabel('log10(Spectral Radiance)')
     ax.set_title(f'Blackbody Spectrum (T = {T} K)')
     ax.legend()
     ax.grid(True, which='both', ls='--', alpha=0.5)
