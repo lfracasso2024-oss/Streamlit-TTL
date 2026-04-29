@@ -3,6 +3,8 @@ from scipy.integrate import quad
 import matplotlib.pyplot as plt
 import streamlit as st
 
+# -15 to -5
+
 # Constants
 h = 6.62607015e-34
 k = 1.380649e-23
@@ -32,12 +34,16 @@ def blackbody_energy_fraction(v1, v2, T):
 
 # Streamlit UI
 st.sidebar.header("Input Parameters")
-T = st.sidebar.number_input("Temperature (K)", min_value=1.0, value=3000.0, step=1.0)
+T = st.sidebar.number_input("Temperature (K)", min_value=1.0, value=3000.0, step=500.0)
 
 st.sidebar.markdown("Frequency Range (Hz)")
 st.sidebar.markdown("*TIP: you can input scientific notation like 1e13 for 10^13 directly in the boxes below*")
-v1 = st.sidebar.number_input("Lower Frequency (v1)", min_value=1e9, value=1e13, step=1e9, format="%.1e")
-v2 = st.sidebar.number_input("Upper Frequency (v2)", min_value=1e9, value=1e14, step=1e9, format="%.1e")
+v1 = st.sidebar.number_input("Lower Frequency (v1)", min_value=4e13, value=4e14, step=1e9, format="%.1e")
+v2 = st.sidebar.number_input("Upper Frequency (v2)", min_value=8e14, value=8e14, step=1e9, format="%.1e")
+
+# add number input for y axis limits
+y_min = st.sidebar.number_input("Y-axis Minimum", min_value=-20.0, max_value=0.0, value=-15.0, step=1.0)
+y_max = st.sidebar.number_input("Y-axis Maximum", min_value=-20.0, max_value=0.0, value=-5.0, step=1.0)
 
 # error
 if v1 >= v2:
@@ -54,21 +60,23 @@ else:
 
     # Plot
     fig, ax = plt.subplots(figsize=(10, 6))
-    frequencies = np.logspace(9, 15, 1000)
+    frequencies = np.logspace(12, 18, 1000)
     intensities = np.array([planck(v, T) for v in frequencies])
 
     ax.plot(frequencies, intensities, linewidth=2, color='black', label='Blackbody Spectrum')
 
+    log_intensities = np.log10(intensities)
+
     # Shade area
     mask = (frequencies >= v1) & (frequencies <= v2)
-    ax.fill_between(frequencies[mask], intensities[mask], alpha=0.3,
-                    label=f"Fraction = {fraction:.2%}", color='orange')
+    ax.fill_between(frequencies[mask], log_intensities[mask], alpha=0.3, label=f"Fraction = {fraction:.2%}", color='orange')
 
     # Vertical lines
     ax.axvline(v1, linestyle='--', color='red', label=f'v1 = {v1:.1e} Hz')
     ax.axvline(v2, linestyle='--', color='red', label=f'v2 = {v2:.1e} Hz')
     ax.set_xscale('log')
-    ax.set_yscale('log')
+    ax.plot(frequencies, log_intensities, linewidth=2, color='black', label='Blackbody Spectrum')
+    ax.set_ylim(y_min, y_max)
     ax.set_xlabel('Frequency (Hz)')
     ax.set_ylabel('Spectral Radiance')
     ax.set_title(f'Blackbody Spectrum (T = {T} K)')
