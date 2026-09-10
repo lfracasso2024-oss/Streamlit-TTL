@@ -28,6 +28,18 @@ st.sidebar.header("Telescope & Object")
 M_quasar = st.sidebar.number_input("Absolute Magnitude (M)", value=-26.7)
 limiting_mag = st.sidebar.number_input("Telescope Limiting Mag", value=26.0)
 
+# K correction inputs (Hogg et al. 2002, eq. 13, power-law spectrum L_nu ~ nu^alpha)
+st.sidebar.header("K Correction (Hogg+02 eq. 13)")
+alpha = st.sidebar.number_input("Spectral index α (L_ν ∝ ν^α)", value=-0.5, step=0.1,
+                                help="Power-law slope of the quasar continuum. α ≈ -0.5 is typical for the optical/UV.")
+NO_FILTER = "None (filter-independent)"
+R_choice = st.sidebar.selectbox("Observed filter R", [NO_FILTER] + list(cc.FILTERS))
+same_band = st.sidebar.checkbox("Rest-frame band Q = R", value=True, disabled=(R_choice == NO_FILTER),
+                                help="Untick if the absolute magnitude M is defined in a different rest-frame band than the one you observe in.")
+Q_choice = R_choice
+if R_choice != NO_FILTER and not same_band:
+    Q_choice = st.sidebar.selectbox("Rest-frame filter Q (band of M)", list(cc.FILTERS))
+
 # Math
 Omega_k = 1.0 - Omega_m - Omega_Lambda
 
@@ -37,9 +49,20 @@ DL = cc.luminosity_distance(z, H0, Omega_m, Omega_k, Omega_Lambda)  # in Mpc
 # Calculate age at z 
 age_z = cc.age_at_redshift(z, H0, Omega_m, Omega_k, Omega_Lambda)
 
+# K correction
+if R_choice == NO_FILTER:
+    # Power law with Q = R: eq. 13 collapses to K = -2.5 (1 + alpha) log10(1 + z), no filter needed
+    K = cc.k_correction_power_law(z, alpha)
+    rest_range = None
+else:
+    R_band = cc.FILTERS[R_choice]
+    Q_band = cc.FILTERS[Q_choice]
+    K = cc.k_correction(z, cc.power_law_L_lambda(alpha), R_band, Q_band)
+    rest_range = cc.rest_frame_range(R_band, z)
+
 # Calculate Magnitudes
 mu = 5 * np.log10(DL) + 25 # Distance modulus (DL in Mpc, so we add 25)
-m = mu + M_quasar          # Apparent magnitude
+m = mu + M_quasar + K      # Apparent magnitude: m_R = M_Q + DM + K_QR (Hogg eq. 2)
 detectable = "Yes" if m <= limiting_mag else "No"
 
 # --- Display Results
@@ -53,7 +76,19 @@ with col1:
     
 with col2:
     st.metric(label="Distance Modulus (μ)", value=f"{mu:.4f}")
+    st.metric(label="K Correction (K)", value=f"{K:.4f}")
     st.metric(label="Apparent Magnitude (m)", value=f"{m:.4f}")
+
+if rest_range is not None:
+    lo, hi = rest_range
+    st.caption(f"{R_choice} at z = {z:g} samples rest-frame wavelengths {lo:.1f}-{hi:.1f} nm "
+               f"(rest-frame band Q: {Q_choice}).")
+    if hi < cc.LYMAN_ALPHA_NM:
+        st.warning(f"The whole observed band sits blueward of Lyman α ({cc.LYMAN_ALPHA_NM} nm) in the rest frame. "
+                   "At high z the IGM absorbs nearly all of that light, so a pure power-law K correction is not reliable here.")
+    elif lo < cc.LYMAN_ALPHA_NM:
+        st.info(f"Part of the observed band is blueward of Lyman α ({cc.LYMAN_ALPHA_NM} nm) in the rest frame; "
+                "the power-law K correction ignores IGM absorption there.")
 
 st.markdown("---")
 if m <= limiting_mag:
