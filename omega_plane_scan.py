@@ -39,19 +39,18 @@ GRID_N = 121           # resolution of the background map of |m - m0|
 # physics helpers 
 def is_physical(Om, OL, z, H0=H0, n=400):
     """True if the cosmology can be used at redshift z.
-
     Requires Omega_m >= 0 and E(z')^2 > 0 for all 0 <= z' <= z (otherwise the
     universe bounced and never reached that redshift), and for a closed universe
     that the light has not yet passed the antipode (where D_L would hit zero).
     """
-    if Om < 0:
+    if Om < 0:                                         # no Big Bang
         return False
     Ok = 1.0 - Om - OL
     zz = np.linspace(0.0, z, n)
-    E2 = Om * (1 + zz) ** 3 + Ok * (1 + zz) ** 2 + OL
-    if np.any(E2 <= 0):
+    E2 = Om * (1 + zz) ** 3 + Ok * (1 + zz) ** 2 + OL  
+    if np.any(E2 <= 0):                                # where friedmann equation hits zero (bounce) and the comoving distance diverges
         return False
-    if Ok < 0:
+    if Ok < 0:                                         # where luminosity distance hits zero (antipode) and the apparent magnitude explodes
         d_c = cc.comoving_distance(z, H0, Om, Ok, OL)
         if np.sqrt(-Ok) * d_c * H0 / cc.c >= np.pi:
             return False
@@ -66,7 +65,7 @@ def apparent_magnitude(z, Om, OL, H0=H0, M=None, alpha=ALPHA):
     DL = cc.luminosity_distance(z, H0, Om, Ok, OL)   # Mpc
     mu = 5.0 * np.log10(DL) + 25.0
     K = cc.k_correction_power_law(z, alpha)          # independent of cosmology
-    return M + mu + K
+    return M + mu + K                                # apparent magnitude
 
 
 # the ray walk
@@ -80,20 +79,18 @@ def step_out(z, theta_deg, m0, tol=TOL, step=STEP, max_r=MAX_R, origin=(OM0, OL0
                       last physical one
       'max_r'      -> walked max_r without leaving the band (degenerate direction)
     """
-    th = np.radians(theta_deg)
-    ux, uy = np.cos(th), np.sin(th)
-    rs, Oms, OLs, ms = [], [], [], []
-    r, reason = 0.0, "max_r"
-    while r <= max_r:
-        Om, OL = origin[0] + r * ux, origin[1] + r * uy
+    th = np.radians(theta_deg)                                   # angle in radians
+    ux, uy = np.cos(th), np.sin(th)                              # unit vector in the (Om, OL) plane (component along Omega_m, component along Omega_Lambda)
+    rs, Oms, OLs, ms = [], [], [], []                            # arrays to record the path
+    r, reason = 0.0, "max_r"                                     # reason for stopping the walk
+    while r <= max_r:        # walk until we hit the max distance
+        Om, OL = origin[0] + r * ux, origin[1] + r * uy          # compute the cosmology at this point
         if not is_physical(Om, OL, z):
             reason = "unphysical"
             break
-        m = apparent_magnitude(z, Om, OL)
-        if abs(m - m0) > tol:
-            # crossed the band: bisect between the last inside point and this one
-            # so the final point sits on |m - m0| = tol instead of overshooting
-            lo, hi = r - step, r
+        m = apparent_magnitude(z, Om, OL)                        # this block is skipped if we hit the physical limit, so m is always defined
+        if abs(m - m0) > tol:                                    # if we stepped outside the tolerance band, do a binary search to find the last point inside the band
+            lo, hi = r - step, r                                 
             for _ in range(12):
                 mid = 0.5 * (lo + hi)
                 m_mid = apparent_magnitude(z, origin[0] + mid * ux, origin[1] + mid * uy)
@@ -135,7 +132,7 @@ def magnitude_map(z, m0, om_range, ol_range, n=GRID_N):
     return oms, ols, dm
 
 
-# plot
+# plot (asked claude to improve the figure layout and labeling)
 
 def plot_omega_plane(results, tol, show_map=True):
     """results: list of (z, m0, rays)."""
@@ -199,7 +196,8 @@ def plot_ray_profiles(z, m0, rays, tol, angles=(0, 45, 90, 135, 180, 225, 270, 3
     return fig
 
 
-# main
+# main. This is the command line interface. It scans the Omega plane for each requested redshift, prints a summary,
+# and makes two plots: the Omega plane with the boundary points, and a ray-profile plot
 def main():
     global M_ABS
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
