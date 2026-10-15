@@ -24,8 +24,8 @@ import matplotlib.pyplot as plt
 import cosmo_calc as cc
 
 # default settings 
-Z_LIST = [2.0, 3.0, 4.0]
-M_ABS = -26.7          # absolute magnitude of the quasar
+Z_LIST = [2.0, 7.0, 10]  # redshifts to scan
+M_ABS = -10          # absolute magnitude of the quasar
 H0 = 70.0              # km/s/Mpc
 ALPHA = -0.5           # power-law slope L_nu ~ nu^alpha (K correction, Hogg convention)
 TOL = 0.03             # +- tolerance in magnitudes
@@ -174,7 +174,7 @@ def plot_omega_plane(results, tol, show_map=True):
                  "points: where each ray leaves the band (o tolerance, x physical limit); "
                  "shading: band from a grid", fontsize=10)
     ax.grid(alpha=0.3)
-    ax.legend(loc="upper left", fontsize=9)
+    ax.legend(loc="upper right", fontsize=9)
     fig.tight_layout()
     return fig
 
