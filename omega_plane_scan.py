@@ -23,7 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cosmo_calc as cc
 
-# ------------------------------ default settings ------------------------------
+# default settings 
 Z_LIST = [2.0, 3.0, 4.0]
 M_ABS = -26.7          # absolute magnitude of the quasar
 H0 = 70.0              # km/s/Mpc
@@ -36,7 +36,7 @@ N_ANGLES = 360         # one ray every degree
 GRID_N = 121           # resolution of the background map of |m - m0|
 
 
-# ------------------------------ physics helpers -------------------------------
+# physics helpers 
 def is_physical(Om, OL, z, H0=H0, n=400):
     """True if the cosmology can be used at redshift z.
 
@@ -69,7 +69,7 @@ def apparent_magnitude(z, Om, OL, H0=H0, M=None, alpha=ALPHA):
     return M + mu + K
 
 
-# ------------------------------ the ray walk ----------------------------------
+# the ray walk
 def step_out(z, theta_deg, m0, tol=TOL, step=STEP, max_r=MAX_R, origin=(OM0, OL0)):
     """Walk from the fiducial point along angle theta (degrees, measured from the
     +Omega_m axis towards +Omega_Lambda) until |m - m0| > tol.
@@ -135,7 +135,8 @@ def magnitude_map(z, m0, om_range, ol_range, n=GRID_N):
     return oms, ols, dm
 
 
-# ------------------------------ plotting --------------------------------------
+# plot
+
 def plot_omega_plane(results, tol, show_map=True):
     """results: list of (z, m0, rays)."""
     colors = plt.cm.viridis(np.linspace(0.15, 0.85, len(results)))
@@ -198,7 +199,7 @@ def plot_ray_profiles(z, m0, rays, tol, angles=(0, 45, 90, 135, 180, 225, 270, 3
     return fig
 
 
-# ------------------------------ main ------------------------------------------
+# main
 def main():
     global M_ABS
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
